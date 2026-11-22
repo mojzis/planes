@@ -19,6 +19,8 @@ plane (but lets save on $$ for now)"
   animated. No mascot, no generated pictures, so nothing is spent on image models.
 - Every frame comes from the fold model, the same as the steps page.
 - The narration is a friendly girl's voice from a local TTS model.
+- English first (asked which language goes first, the user picked English,
+  2026-11-22). The scenario keeps the Czech text for when cecil has a Czech voice.
 
 ## Consequences
 

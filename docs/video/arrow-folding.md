@@ -7,8 +7,9 @@ the video always matches the steps page. Made with cecil; the format follows its
 scenario layout (scenes, lines, directions). Decision:
 [0003-folding-videos.md](../decisions/0003-folding-videos.md).
 
-Narration is written in Czech and English. Czech needs a Czech voice in cecil first
-(see "What cecil needs" below).
+Narration is written in Czech and English. **English is voiced first** (the user's
+choice, 2026-11-22): cecil can voice it today. The Czech text waits until cecil has a
+Czech voice (see "What cecil needs" below).
 
 ## The whole video
 
@@ -17,7 +18,7 @@ Narration is written in Czech and English. Czech needs a Czech voice in cecil fi
 - **Frame:** horizontal 16:9, 1920 x 1080, 24 fps.
 - **Background:** `paper:cream` in every shot, nothing else. The sheet is white on top,
   pale grey underneath, as on the site.
-- **Cast:** one voice, heard and never seen: `Vypravěčka` (cs) / `Narrator` (en).
+- **Cast:** one voice, heard and never seen: `Narrator` (`Vypravěčka` in the Czech lines).
 - **Voice:** designed once, then cloned for every line (cecil decision 0007).
   Description: *"A friendly girl of about ten, bright and cheerful, speaking clearly
   and a little slowly, like showing a friend how to fold something. A natural girl's
@@ -235,7 +236,7 @@ cecil cannot make this film yet. Two things are missing (filed as cecil feature 
    video needs a few hundred frames from the fold model, played at 12 a second on one
    actor.
 2. **A Czech voice.** cecil's voice model (Qwen3-TTS) speaks ten languages, Czech not
-   among them. The English version can be voiced today.
+   among them. The English version, which goes first, can be voiced today.
 
 Also small: a paper-crease sound in cecil's `sfx` list (a soft `whoosh` until then),
 and a per-language `say` (so "A4" can be shown and "á čtyři" spoken).
