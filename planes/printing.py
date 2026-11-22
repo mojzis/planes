@@ -61,14 +61,45 @@ def sheet_document(plane: Plane) -> str:
     return _doc(plane, [f'<div class="page lines">{plane.line_sheet}</div>'])
 
 
-def write_pdfs(planes: list[Plane], out: Path) -> list[Path]:
-    """Print each plane's two PDFs into ``out/<slug>/`` with headless Chromium."""
+CARD_W, CARD_H = 1200, 630
+
+CARD_CSS = f"""
+* {{ box-sizing: border-box }}
+body {{ margin: 0; width: {CARD_W}px; height: {CARD_H}px; overflow: hidden;
+  font-family: Inter, 'DejaVu Sans', sans-serif; color: #212529;
+  background: linear-gradient(160deg, #e7f5ff, #fff 60%) }}
+.card {{ display: flex; flex-direction: column; height: 100%; padding: 48px 64px }}
+.brand {{ color: #1971c2; font-weight: 800; font-size: 30px }}
+h1 {{ font-size: 76px; font-weight: 900; letter-spacing: -2px; margin: 6px 0 0 }}
+.pics {{ flex: 1; display: flex; align-items: center; justify-content: center;
+  gap: 24px; min-height: 0 }}
+.pics svg {{ height: 100%; max-width: 100%; flex: 1 }}
+"""
+
+
+def card_document(title: str, pictures: list[str]) -> str:
+    """A 1200x630 social preview: the site name, a title and 3D pictures."""
+    return (
+        f'<!doctype html><html><head><meta charset="utf-8"><style>{CARD_CSS}</style>'
+        f'</head><body><div class="card"><div class="brand">✈ Paper planes</div>'
+        f'<h1>{title}</h1><div class="pics">{"".join(pictures)}</div></div>'
+        "</body></html>"
+    )
+
+
+def card_path(slug: str) -> str:
+    """Site-relative path of a page's social preview (``""`` is the home page)."""
+    return f"{slug}/social.png" if slug else "social.png"
+
+
+def write_build_files(planes: list[Plane], out: Path) -> list[Path]:
+    """Print each plane's two PDFs into ``out/<slug>/`` and every social preview."""
     from playwright.sync_api import sync_playwright  # noqa: PLC0415 -- heavy, build only
 
     written = []
     with sync_playwright() as pw:
         browser = pw.chromium.launch()
-        page = browser.new_page()
+        page = browser.new_page(viewport={"width": CARD_W, "height": CARD_H})
         for plane in planes:
             folder = out / plane.slug
             folder.mkdir(parents=True, exist_ok=True)
@@ -80,5 +111,19 @@ def write_pdfs(planes: list[Plane], out: Path) -> list[Path]:
                 path = folder / name
                 page.pdf(path=str(path), format="A4", print_background=True)
                 written.append(path)
+        cards = [
+            (
+                "",
+                card_document(
+                    "Fold, throw, fly", [p.finished or "" for p in planes[:3]]
+                ),
+            )
+        ]
+        cards += [(p.slug, card_document(p.name, [p.finished or ""])) for p in planes]
+        for slug, doc in cards:
+            page.set_content(doc, wait_until="load")
+            path = out / card_path(slug)
+            page.screenshot(path=str(path))
+            written.append(path)
         browser.close()
     return written

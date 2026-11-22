@@ -19,7 +19,8 @@ site whose App makes one page per plane and prints the PDFs after the build.
   lie on the top, front-facing layer when they are folded.
 - `planes/catalogue.py`: a `Plane` per model: panels (text, flat SVG, 3D SVG), tips,
   badges, finished picture, line sheet. `ORDER` is the catalogue order.
-- `planes/printing.py`: HTML for the two PDFs and `write_pdfs` (Playwright,
+- `planes/printing.py`: HTML for the two PDFs and the social previews, and
+  `write_build_files` (Playwright,
   headless Chromium).
 - `site/site_app.py`: deedum `App`: catalogue page, plane pages, PDFs in
   `after_build`. Templates and CSS live next to it.
@@ -28,4 +29,4 @@ site whose App makes one page per plane and prints the PDFs after the build.
 
 `poe site` → deedum loads `site_app.PlanesApp` → `planes()` builds every model once →
 pages render from `templates/` → `after_build` prints `<slug>/<slug>-steps.pdf` and
-`<slug>/<slug>-lines.pdf` into `_site/` → `deedum check` lints links and heads.
+`<slug>/<slug>-lines.pdf` and a 1200x630 `social.png` (the 3D view, used as og:image) into `_site/` → `deedum check` lints links and heads.

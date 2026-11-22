@@ -1,7 +1,14 @@
 import pytest
 
 from planes.catalogue import ORDER, plane, planes
-from planes.printing import PER_PAGE, panel_html, sheet_document, steps_document
+from planes.printing import (
+    PER_PAGE,
+    card_document,
+    card_path,
+    panel_html,
+    sheet_document,
+    steps_document,
+)
 
 
 @pytest.mark.parametrize("slug", ORDER)
@@ -50,3 +57,13 @@ def test_steps_document_splits_panels_into_pages():
 
 def test_sheet_document_is_one_page():
     assert sheet_document(plane("tube")).count('class="page') == 1
+
+
+def test_social_card_shows_the_title_and_each_picture():
+    doc = card_document("Stingray", ["<svg>a</svg>", "<svg>b</svg>"])
+    assert "<h1>Stingray</h1>" in doc
+    assert doc.count("<svg>") == 2
+
+
+def test_home_card_sits_at_the_site_root():
+    assert [card_path(""), card_path("tube")] == ["social.png", "tube/social.png"]

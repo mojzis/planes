@@ -1,7 +1,8 @@
 """deedum App for the planes site: a catalogue page and one page per plane.
 
-Each plane page links two PDFs, printed in ``after_build``. Set ``PLANES_PDF=0`` to
-skip them (quicker ``deedum serve``; ``deedum check`` then reports the missing links).
+Each plane page links two PDFs, printed in ``after_build`` along with the social
+preview images. Set ``PLANES_PDF=0`` to skip them (quicker ``deedum serve``;
+``deedum check`` then reports the missing links).
 """
 
 import os
@@ -14,7 +15,7 @@ from deedum import Page
 from markupsafe import Markup
 
 from planes.catalogue import Plane, planes
-from planes.printing import panel_html, write_pdfs
+from planes.printing import card_path, panel_html, write_build_files
 from planes.sheets import defs, legend
 
 
@@ -42,6 +43,7 @@ class PlanesApp(deedum.App):
                 description="Original paper planes for kids: step-by-step pictures "
                 "and printable PDFs.",
                 template="home.html",
+                image=card_path(""),
             )
         )
         pages.extend(
@@ -51,6 +53,7 @@ class PlanesApp(deedum.App):
                 description=_intro(plane),
                 template="plane.html",
                 source=_markdown(plane),
+                image=card_path(plane.slug),
             )
             for url, plane in self.by_url.items()
         )
@@ -82,9 +85,9 @@ class PlanesApp(deedum.App):
         return {"cards": cards, "legend": Markup(legend())}  # noqa: S704
 
     def after_build(self, out: Path) -> None:
-        """Print the two PDFs of every plane next to its page."""
+        """Print the two PDFs of every plane and the social previews."""
         if os.environ.get("PLANES_PDF", "1") != "0":
-            write_pdfs(self.planes, out)
+            write_build_files(self.planes, out)
 
 
 def _plain(text: str) -> str:
