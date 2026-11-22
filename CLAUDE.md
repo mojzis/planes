@@ -9,7 +9,7 @@ docs/architecture.md; decisions in docs/decisions/ (newest wins).
 - `uv run poe site` — build site + PDFs into `_site/` and lint it (`deedum check`).
   PDFs need Chromium once: `uv run playwright install chromium`.
 - `uv run poe serve` — live preview, `PLANES_PDF=0` (no PDFs or social images, so check reports the PDFs missing).
-- The deedum site is in `site/`, not the repo root (decision 0002).
+- The deedum site is the repo root: config in `[tool.deedum]`, `site_app.py`, `templates/`, `static/` (decision 0002).
 - Pictures come only from the fold model (`planes/models.py`). Never hand-draw a step.
 - New plane: add its steps to `models.py`, a builder + slug in `catalogue.py`
   (`ORDER`), then look at the page and both PDFs before committing.

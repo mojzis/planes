@@ -2,8 +2,8 @@
 
 ## Overview
 
-`planes/` turns fold steps into pictures; `site/` is a [deedum](https://github.com/mojzis/deedum)
-site whose App makes one page per plane and prints the PDFs after the build.
+`planes/` turns fold steps into pictures; the repo root is a [deedum](https://github.com/mojzis/deedum)
+site (config in `[tool.deedum]` of `pyproject.toml`) whose App makes one page per plane and prints the PDFs after the build.
 
 ## Components
 
@@ -22,8 +22,8 @@ site whose App makes one page per plane and prints the PDFs after the build.
 - `planes/printing.py`: HTML for the two PDFs and the social previews, and
   `write_build_files` (Playwright,
   headless Chromium).
-- `site/site_app.py`: deedum `App`: catalogue page, plane pages, PDFs in
-  `after_build`. Templates and CSS live next to it.
+- `site_app.py`: deedum `App`: catalogue page, plane pages, PDFs in
+  `after_build`. Templates in `templates/`, CSS in `static/`.
 
 ## Flows
 
