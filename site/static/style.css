@@ -1,0 +1,35 @@
+* { box-sizing: border-box }
+body { margin: 0; font: 16px/1.5 Inter, system-ui, sans-serif; color: #212529; background: #f8f9fa }
+main { max-width: 68rem; margin: 0 auto; padding: 1rem 1.25rem 2rem }
+a { color: #1864ab }
+.top { background: #1971c2; padding: .6rem 1.25rem }
+.top a { color: #fff; font-weight: 800; text-decoration: none; font-size: 1.1rem }
+h1 { font-size: 2.4rem; font-weight: 900; letter-spacing: -.02em; margin: .5rem 0 .25rem }
+.lead { font-size: 1.15rem; color: #495057; max-width: 44rem; margin: 0 0 .75rem }
+.badge { display: inline-block; background: #e9ecef; border-radius: 99px; padding: .1rem .7rem; font-size: .85rem; font-weight: 700; margin: 0 .4rem .4rem 0 }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 1rem; margin-top: 1.5rem }
+.card { display: block; background: #fff; border: 1px solid #dee2e6; border-radius: 12px; padding: 1rem; color: inherit; text-decoration: none; transition: transform .15s, box-shadow .15s }
+.card:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,.08) }
+.card h2 { margin: .5rem 0 .2rem; font-size: 1.35rem }
+.card p { margin: 0 0 .6rem; color: #495057; font-size: .95rem }
+.pic svg { width: 100%; height: auto; display: block }
+.hero { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; align-items: center; background: #fff; border: 1px solid #dee2e6; border-radius: 12px; padding: 1rem; margin: 1rem 0 }
+.downloads { display: flex; flex-direction: column; gap: .75rem }
+.dl { display: block; background: #1971c2; color: #fff; border-radius: 10px; padding: .7rem 1rem; text-decoration: none; font-size: 1.1rem }
+.dl:hover { background: #1864ab }
+.dl small { display: block; opacity: .85; font-size: .85rem }
+.note { color: #868e96; font-size: .9rem; margin: 0 }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: .9rem; margin-top: 1rem }
+.panel { background: #fff; border: 1px solid #dee2e6; border-radius: 10px; padding: .6rem .7rem }
+.panel svg { width: 100%; height: auto; display: block }
+.panel .iso { border-top: 1px dashed #e9ecef; margin-top: .3rem }
+.panel.opt { border-style: dashed; border-color: #adb5bd }
+.panel.done { background: #fff9db; border-color: #ffd43b }
+.opt-tag { display: inline-block; background: #e9ecef; border-radius: 6px; padding: 0 .4rem; font-size: .75rem; font-weight: 700; margin-right: .3rem }
+.txt { display: flex; align-items: flex-start; gap: .5rem; font-size: .95rem; line-height: 1.35; min-height: 2.6rem }
+.num { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 1.8rem; height: 1.8rem; border-radius: 50%; background: #1971c2; color: #fff; font-weight: 900 }
+.num.ok { background: #f59f00 }
+.legend { display: flex; flex-wrap: wrap; gap: .4rem 1.4rem; font-size: .9rem; color: #495057; align-items: center }
+.tips { margin-top: 1.25rem; background: #e7f5ff; border-radius: 10px; padding: .8rem 1rem; line-height: 1.5 }
+footer { max-width: 68rem; margin: 0 auto; padding: 1rem 1.25rem 2rem; color: #868e96; font-size: .85rem }
+@media (max-width: 40rem) { .hero { grid-template-columns: 1fr } h1 { font-size: 1.9rem } }

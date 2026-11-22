@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% block content %}
+{{ defs }}
+<h1>{{ plane.name }}</h1>
+<p class="lead">{{ plane.sub }}</p>
+<div>{% for b in plane.badges %}<span class="badge">{{ b }}</span>{% endfor %}</div>
+<div class="hero">
+<div class="pic">{{ finished }}</div>
+<div class="downloads">
+<a class="dl" href="{{ url(plane.slug + '/' + plane.slug + '-steps.pdf') }}"><b>Steps</b> PDF<small>the pictures below, on A4</small></a>
+<a class="dl" href="{{ url(plane.slug + '/' + plane.slug + '-lines.pdf') }}"><b>Line sheet</b> PDF<small>print it, fold on the lines{% if plane.scissors %}, cut the black ones{% endif %}</small></a>
+<p class="note">No printer? The steps work with any plain A4 sheet: the sizes are in cm.</p>
+</div>
+</div>
+<h2>Steps</h2>
+{{ legend }}
+<div class="grid">
+{% for p in panels %}{{ p }}{% endfor %}
+</div>
+<div class="tips">{{ tips }}</div>
+<p><a href="{{ url('') }}">← all planes</a></p>
+{% endblock %}

@@ -1,4 +1,21 @@
-# Python Template
+# Paper planes
+
+Original paper planes for kids: one page per plane (steps + 3D views) and two A4 PDFs
+(steps, line sheet), published with deedum to GitHub Pages. See README.md and
+docs/architecture.md; decisions in docs/decisions/ (newest wins).
+
+## Project
+
+- `uv run poe site` — build site + PDFs into `_site/` and lint it (`deedum check`).
+  PDFs need Chromium once: `uv run playwright install chromium`.
+- `uv run poe serve` — live preview, `PLANES_PDF=0` (no PDFs, so check reports them missing).
+- The deedum site is in `site/`, not the repo root (decision 0002).
+- Pictures come only from the fold model (`planes/models.py`). Never hand-draw a step.
+- New plane: add its steps to `models.py`, a builder + slug in `catalogue.py`
+  (`ORDER`), then look at the page and both PDFs before committing.
+- After changing a model or renderer, look at the result (screenshot the page, rasterize
+  the PDF with `pdftoppm`); tests only check structure.
+
 
 ## Commands
 
@@ -11,7 +28,7 @@
 
 uv, ruff (lint/format), ty (type check), pytest, poethepoet (task runner)
 
-Package lives in `python_template/` (no `src/`).
+Package lives in `planes/` (no `src/`).
 
 ## Standards
 
@@ -82,7 +99,11 @@ uv lock --refresh --upgrade-package madoqua --upgrade-package gerenuk --upgrade-
 `--refresh` matters: without it uv may serve a cached index and miss a release
 published minutes ago.
 
-## New project from this template
+## CI
+
+`ci.yml` runs `poe check`; `pages.yml` builds and deploys the site.
+
+## Actions versions
 
 When starting a new project from this template, set up a GitHub Actions CI pipeline
 (`.github/workflows/ci.yml`) that runs `uv sync` and `uv run poe check` on push and pull
