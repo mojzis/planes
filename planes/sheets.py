@@ -36,6 +36,19 @@ h1 { font-weight: 900; font-size: 26pt; margin: 0; letter-spacing: -0.5px }
 .big { grid-column: span 2 }
 .legend { display: flex; flex-wrap: wrap; gap: 6mm; font-size: 8.5pt; color: #495057;
   margin: 3mm 0 0; align-items: center }
+.exp { margin: -2mm 0 3mm; background: #e7f5ff; border-radius: 2.5mm; padding: 2mm 3mm;
+  font-size: 9.5pt; line-height: 1.4 }
+.labgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; margin-top: 4mm }
+.labcard { border: 0.4mm solid #dee2e6; border-radius: 3mm; padding: 2mm 3mm; font-size: 10pt }
+.labcard span { color: #495057; font-size: 9pt }
+.labcard svg { width: 100%; height: auto }
+table.score { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin-bottom: 3mm }
+table.score th, table.score td { border: 0.3mm solid #868e96; padding: 2mm; height: 11mm;
+  text-align: left }
+table.score th { background: #f1f3f5; height: auto }
+h3 { font-size: 12pt; margin: 4mm 0 2mm }
+.lines-box { height: 45mm; background: repeating-linear-gradient(#fff 0 9mm, #ced4da 9mm 9.3mm) }
+.tips ol { margin: 1mm 0 0; padding-left: 5mm }
 .tips { margin-top: 3mm; background: #f1f3f5; border-radius: 3mm; padding: 2.5mm 4mm;
   font-size: 9pt; line-height: 1.35 }
 .foot { position: absolute; bottom: 4mm; left: 12mm; right: 12mm; font-size: 7.5pt;

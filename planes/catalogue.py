@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from functools import cache
 
 from . import iso, render
-from .models import albatross, arrow, arrow_blunt, arrow_lock, tube
+from .models import albatross, arrow, arrow_blunt, arrow_lock, dart, tube
 from .render import state_svg, wing_views
 from .sheets import TUBE_THROW, TUBE_TUCK, line_el, line_sheet_svg, visible_creases
 
@@ -39,6 +39,7 @@ class Plane:
     height: float
     finished: str | None = None
     scissors: bool = False
+    lab: str | None = None  # Arrow lab: "what changed / guess first" box, as HTML
 
     @property
     def name(self) -> str:
@@ -80,6 +81,72 @@ ARROWS = {
     ),
 }
 ORDER = ["arrow", "arrow-lock", "arrow-blunt", "stingray", "albatross", "tube"]
+
+# The Arrow lab: four almost identical planes, each changing one thing.
+# slug: (letter, title, sub, what changed, guess first, model)
+LAB: dict[str, tuple[str, str, str, str, str, Callable[[], dict]]] = {
+    "lab-a-base": (
+        "A",
+        "BASE DART",
+        "The plane we compare everything with. Fold it first.",
+        "Nothing: this is the base. Wings folded 1.6 cm from the middle.",
+        "How many steps far will it fly? Write your guess on the score card.",
+        lambda: dart(16),
+    ),
+    "lab-b-big-wings": (
+        "B",
+        "BIG WINGS",
+        "Same as the base dart, but the wings are folded only 0.8 cm from the middle.",
+        "Bigger wings, smaller body.",
+        "Will big wings fly farther, or float longer, or wobble more?",
+        lambda: dart(8),
+    ),
+    "lab-c-small-wings": (
+        "C",
+        "SMALL WINGS",
+        "Same as the base dart, but the wings are folded 3 cm from the middle.",
+        "Smaller wings, deeper body.",
+        "Will small wings go faster? Farther? Will it dive?",
+        lambda: dart(30),
+    ),
+    "lab-d-heavy-nose": (
+        "D",
+        "HEAVY NOSE",
+        "The front is folded down and in twice, so the nose has many layers of paper.",
+        "Lots more paper in the nose (the wing shape changes a little too).",
+        "Does a heavy nose fly farther, or does it dive?",
+        lambda: arrow(beak=False),
+    ),
+}
+LAB_ORDER = list(LAB)
+LAB_INTRO = (
+    "Four paper planes that are almost the same. Each one changes <b>one thing</b>, "
+    "so you can find out what makes a plane fly far."
+)
+LAB_HOWTO = (
+    "<b>How to be a plane scientist</b><ol>"
+    "<li>Fold plane A first, then B, C and D. Write the letter on each.</li>"
+    "<li>Before you throw, <b>guess</b>: which will fly farthest? Write it down.</li>"
+    "<li>Throw each plane 3 times from the same spot, the same way. Count your steps "
+    "to where it lands.</li>"
+    "<li>Then try the experiments on the score card: change one thing, throw again, "
+    "compare.</li>"
+    "<li>Was your guess right? Why do you think so?</li></ol>"
+)
+LAB_FOUND = (
+    "<b>What scientists found</b> (read it after testing!)<br>Bigger wings hold the "
+    "plane up longer but slow it down. Small wings are fast but drop sooner. Weight in "
+    "the nose keeps the plane pointing forward; too much makes it dive. Stabilizers "
+    "(bent-up wing tips) stop it swerving. Bending the back edges up lifts the nose."
+)
+LAB_EXPERIMENTS = [
+    "Paper clip on the nose",
+    "Stabilizers: wing tips bent up 1 cm",
+    "Back edges bent UP 3 mm",
+    "Back edges bent DOWN 3 mm",
+    "Wings in a V (tips a bit higher)",
+    "Your own idea:",
+]
 
 
 def _iso(surfs, yaw=-18, pitch=52, w=300, h=190, **kw) -> str:
@@ -340,19 +407,79 @@ def _tube() -> Plane:
     )
 
 
+def _lab(slug: str) -> Plane:
+    letter, title, sub, changed, guess, make = LAB[slug]
+    d = make()
+    m, c = d["m"], d["w"] / 2
+
+    def plane3d(st, **kw):
+        return iso.plane3d(st, c, d["hinge"], d["near"], d["far"], **kw)
+
+    wn = len(m.steps)
+    panels = []
+    for s in m.steps:
+        if s["n"] == wn:
+            v = _iso(plane3d(s["before"], dihedral=-40), 120, 35)
+        else:
+            v = _iso(iso.step_view(s))
+        panels.append(Panel(s["n"], _text(s), _flat(s), v))
+    st = m.steps[-1]["before"]
+    views = wing_views(st, d["hinge"], d["near"], d["far"], 300, 210, pad=8)
+    panels.append(
+        Panel(
+            wn + 1,
+            f"Open the wings flat. Write <b>{letter}</b> on both wings so you know "
+            "which plane is which.",
+            views["top"],
+            _iso(plane3d(st, dihedral=4), 120, 35),
+        )
+    )
+    full = f"ARROW LAB {letter}: {title}"
+    w, h = d["w"], d["h"]
+    creases = _mirror_last(visible_creases(m), m, w)
+    note = "Some later folds go through layers: follow the steps pages."
+    return Plane(
+        slug=slug,
+        title=full,
+        sub=sub,
+        badges=[f"Plane {letter}", "Change one thing", "No scissors"],
+        tips=(
+            "<b>Fair test:</b> same thrower, same spot, same strength. Throw each "
+            "plane 3 times and count steps to where it lands. Then try the "
+            "experiments on the score card."
+        ),
+        panels=panels,
+        line_sheet=line_sheet_svg(full, w, h, creases, [], note),
+        width=w,
+        height=h,
+        finished=_iso(plane3d(st, dihedral=4), 120, 32, 600, 330),
+        lab=(
+            f"<div><b>What changed:</b> {changed}</div>"
+            f"<div><b>Guess first:</b> {guess}</div>"
+        ),
+    )
+
+
 @cache
 def plane(slug: str) -> Plane:
-    """Build one plane by its slug (see ``ORDER``)."""
+    """Build one plane by its slug (see ``ORDER`` and ``LAB_ORDER``)."""
+    if slug in LAB:
+        return _lab(slug)
     if slug in ARROWS:
         return _arrow_family(slug)
     if slug == "albatross":
         return _albatross()
     if slug == "tube":
         return _tube()
-    msg = f"unknown plane {slug!r}; known: {', '.join(ORDER)}"
+    msg = f"unknown plane {slug!r}; known: {', '.join(ORDER + LAB_ORDER)}"
     raise KeyError(msg)
 
 
 def planes() -> list[Plane]:
-    """All planes, in catalogue order."""
+    """The catalogue planes, in order (the Arrow lab is separate)."""
     return [plane(s) for s in ORDER]
+
+
+def lab_planes() -> list[Plane]:
+    """The Arrow lab planes A to D."""
+    return [plane(s) for s in LAB_ORDER]
