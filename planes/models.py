@@ -11,7 +11,7 @@ def halves(C):
     return near, far
 
 
-def arrow():
+def arrow(beak=True):
     W, H = 210.0, 297.0
     C = W / 2
     m = Model(W, H)
@@ -43,6 +43,9 @@ def arrow():
         [((C, -5), (C, H + 5), (60, 280), None, "mountain")],
     )
     k = 16
+    if not beak:
+        _arrow_finish(m, C, H, near, far, k)
+        return dict(m=m, hinge=C + k, near=near, far=far, w=W, h=H, tab=None)
     m.step(
         "Optional beak: fold the back bottom corner up (2.5 cm along the bottom edge), crease hard and unfold. Open the halves a little and push the corner up inside between them along the creases. It sticks up as a little fin.",
         [((C, H - 25), (C + 14, H), (C + 1, H - 1), None, "valley", "beak")],
@@ -54,7 +57,7 @@ def arrow():
     nb = lambda f: near(f) and "beak" not in f.tags
     fb = lambda f: far(f) and "beak" not in f.tags
     m.step(
-        "Fold the wings down 1.5 cm from the middle fold, one to the front and one behind. Keep the fold parallel to the middle fold.",
+        "Fold the wings down 1.6 cm from the middle fold, one to the front and one behind. Keep the fold parallel to the middle fold.",
         [
             ((C + k, -5), (C + k, H + 5), (200, 285), nb, "valley"),
             ((C + k, -5), (C + k, H + 5), (200, 285), fb, "mountain"),
@@ -124,7 +127,7 @@ def tube():
 def _arrow_finish(m, C, H, near, far, k=16, wing_text=None):
     m.step(
         wing_text
-        or "Fold the wings down 1.5 cm from the middle fold, one to the front and one behind. Keep the fold parallel to the middle fold.",
+        or f"Fold the wings down {k / 10:g} cm from the middle fold, one to the front and one behind. Keep the fold parallel to the middle fold.",
         [
             ((C + k, -5), (C + k, H + 5), (200, 285), near, "valley"),
             ((C + k, -5), (C + k, H + 5), (200, 285), far, "mountain"),
@@ -231,4 +234,32 @@ def arrow_blunt():
         [((C, -5), (C, H + 5), (60, 280), None, "mountain")],
     )
     k = _arrow_finish(m, C, H, near, far)
+    return dict(m=m, hinge=C + k, near=near, far=far, w=W, h=H, tab=None)
+
+
+def dart(k=16):
+    """Plain dart: the base plane of the Arrow lab; k is the wing fold in mm."""
+    W, H = 210.0, 297.0
+    C = W / 2
+    m = Model(W, H)
+    near, far = halves(C)
+    m.step(
+        "Fold the sheet in half the long way, edge to edge. Crease well and open it again.",
+        [((C, -5), (C, H + 5), (20, 150))],
+        unfold=True,
+    )
+    m.step(
+        "Fold both top corners down so their edges lie on the middle crease.",
+        [((C, 0), (0, C), (5, 5)), ((C, 0), (W, C), (W - 5, 5))],
+    )
+    y = C / T225
+    m.step(
+        "Fold the slanted edges to the middle line again.",
+        [((C, 0), (0, y), (3, 150)), ((C, 0), (W, y), (W - 3, 150))],
+    )
+    m.step(
+        "Fold in half along the middle, the folds outside (fold the left half behind).",
+        [((C, -5), (C, H + 5), (60, 280), None, "mountain")],
+    )
+    _arrow_finish(m, C, H, near, far, k)
     return dict(m=m, hinge=C + k, near=near, far=far, w=W, h=H, tab=None)

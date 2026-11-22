@@ -14,8 +14,8 @@ import deedum
 from deedum import Page
 from markupsafe import Markup
 
-from planes.catalogue import Plane, planes
-from planes.printing import card_path, panel_html, write_build_files
+from planes.catalogue import LAB_FOUND, LAB_HOWTO, LAB_INTRO, Plane, lab_planes, planes
+from planes.printing import LAB_PDF, SCORE_PDF, card_path, panel_html, write_build_files
 from planes.sheets import defs, legend
 
 
@@ -31,7 +31,8 @@ class PlanesApp(deedum.App):
         """Build every plane once; the pages and the PDFs share them."""
         super().__init__(site)
         self.planes = planes()
-        self.by_url = {f"{p.slug}/": p for p in self.planes}
+        self.lab = lab_planes()
+        self.by_url = {f"{p.slug}/": p for p in self.planes + self.lab}
 
     def load_pages(self) -> list[Page]:
         """The catalogue, one page per plane, plus any markdown in ``content/``."""
@@ -57,10 +58,29 @@ class PlanesApp(deedum.App):
             )
             for url, plane in self.by_url.items()
         )
+        pages.append(
+            self.page(
+                "lab/",
+                title="Arrow lab",
+                description="Four almost identical paper planes, each changing one "
+                "thing: find out what makes a plane fly far.",
+                template="lab.html",
+                image=card_path("lab"),
+            )
+        )
         return pages
 
     def context(self, page: Page) -> dict[str, Any]:
         """``plane`` on a plane page, its pictures marked safe."""
+        if page.url == "lab/":
+            return {
+                "lab_intro": Markup(LAB_INTRO),  # noqa: S704
+                "lab_howto": Markup(LAB_HOWTO),  # noqa: S704
+                "lab_found": Markup(LAB_FOUND),  # noqa: S704
+                "lab_cards": self._cards(self.lab),
+                "lab_pdf": LAB_PDF,
+                "score_pdf": SCORE_PDF,
+            }
         plane = self.by_url.get(page.url)
         if plane is None:
             return {}
@@ -70,24 +90,32 @@ class PlanesApp(deedum.App):
             "finished": Markup(plane.finished or ""),  # noqa: S704
             "tips": Markup(plane.tips),  # noqa: S704
             "defs": Markup(defs(plane.width, plane.height)),  # noqa: S704
+            "lab_box": Markup(plane.lab or ""),  # noqa: S704
         }
 
-    def globals(self) -> dict[str, Any]:
-        """The plane list for the catalogue and the line legend."""
-        cards = [
+    @staticmethod
+    def _cards(group: list[Plane]) -> list[dict[str, Any]]:
+        return [
             {
                 "plane": p,
                 "url": f"{p.slug}/",
                 "picture": Markup(p.finished or ""),  # noqa: S704
             }
-            for p in self.planes
+            for p in group
         ]
-        return {"cards": cards, "legend": Markup(legend())}  # noqa: S704
+
+    def globals(self) -> dict[str, Any]:
+        """The plane list for the catalogue and the line legend."""
+        return {
+            "cards": self._cards(self.planes),
+            "lab_teaser": Markup(self.lab[0].finished or ""),  # noqa: S704
+            "legend": Markup(legend()),  # noqa: S704
+        }
 
     def after_build(self, out: Path) -> None:
         """Print the two PDFs of every plane and the social previews."""
         if os.environ.get("PLANES_PDF", "1") != "0":
-            write_build_files(self.planes, out)
+            write_build_files(self.planes, self.lab, out)
 
 
 def _plain(text: str) -> str:
