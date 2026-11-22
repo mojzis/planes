@@ -18,4 +18,5 @@ The site (config, App, templates, static) lives in `site/`. It imports the insta
 ## Consequences
 
 - `poe site` / `poe serve` pass `--config site/deedum.toml`.
-- Can move back to the root once deedum skips virtualenvs when it forgets modules.
+- Can move back to the root once deedum skips virtualenvs when it forgets modules:
+  [mojzis/deedum#2](https://github.com/mojzis/deedum/issues/2).
