@@ -16,6 +16,7 @@ h1 { font-size: 2.4rem; font-weight: 900; letter-spacing: -.02em; margin: .5rem 
 .hero { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; align-items: center; background: #fff; border: 1px solid #dee2e6; border-radius: 12px; padding: 1rem; margin: 1rem 0 }
 .downloads { display: flex; flex-direction: column; gap: .75rem }
 .dl { display: block; background: #1971c2; color: #fff; border-radius: 10px; padding: .7rem 1rem; text-decoration: none; font-size: 1.1rem }
+.home-dl { max-width: 24rem; margin-top: 1rem }
 .dl:hover { background: #1864ab }
 .dl small { display: block; opacity: .85; font-size: .85rem }
 .note { color: #868e96; font-size: .9rem; margin: 0 }

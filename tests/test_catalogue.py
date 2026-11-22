@@ -3,6 +3,7 @@ import pytest
 from planes.catalogue import ORDER, plane, planes
 from planes.printing import (
     PER_PAGE,
+    all_sheets_document,
     card_document,
     card_path,
     panel_html,
@@ -57,6 +58,11 @@ def test_steps_document_splits_panels_into_pages():
 
 def test_sheet_document_is_one_page():
     assert sheet_document(plane("tube")).count('class="page') == 1
+
+
+def test_all_sheets_document_has_one_page_per_plane():
+    doc = all_sheets_document(planes())
+    assert doc.count('class="page lines"') == len(ORDER)
 
 
 def test_social_card_shows_the_title_and_each_picture():

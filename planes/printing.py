@@ -61,6 +61,20 @@ def sheet_document(plane: Plane) -> str:
     return _doc(plane, [f'<div class="page lines">{plane.line_sheet}</div>'])
 
 
+ALL_LINES_PDF = "all-line-sheets.pdf"
+
+
+def all_sheets_document(planes: list[Plane]) -> str:
+    """HTML for one PDF with every plane's line sheet, one A4 page each."""
+    pages = [f'<div class="page lines">{p.line_sheet}</div>' for p in planes]
+    return (
+        '<!doctype html><html><head><meta charset="utf-8">'
+        "<title>All line sheets</title>"
+        f"<style>{CSS}</style></head><body>{defs(planes[0].width, planes[0].height)}"
+        f"{''.join(pages)}</body></html>"
+    )
+
+
 CARD_W, CARD_H = 1200, 630
 
 CARD_CSS = f"""
@@ -93,7 +107,8 @@ def card_path(slug: str) -> str:
 
 
 def write_build_files(planes: list[Plane], out: Path) -> list[Path]:
-    """Print each plane's two PDFs into ``out/<slug>/`` and every social preview."""
+    """Print each plane's two PDFs into ``out/<slug>/``, one PDF with all line
+    sheets into ``out/``, and every social preview."""
     from playwright.sync_api import sync_playwright  # noqa: PLC0415 -- heavy, build only
 
     written = []
@@ -111,6 +126,10 @@ def write_build_files(planes: list[Plane], out: Path) -> list[Path]:
                 path = folder / name
                 page.pdf(path=str(path), format="A4", print_background=True)
                 written.append(path)
+        page.set_content(all_sheets_document(planes), wait_until="load")
+        path = out / ALL_LINES_PDF
+        page.pdf(path=str(path), format="A4", print_background=True)
+        written.append(path)
         cards = [
             (
                 "",
