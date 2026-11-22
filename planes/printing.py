@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from .catalogue import LAB_EXPERIMENTS, LAB_FOUND, LAB_HOWTO, LAB_INTRO, Panel, Plane
+from .catalogue import Panel, Plane, Series, series_planes
 from .sheets import CSS, defs, legend
 
 PER_PAGE = 6
@@ -44,8 +44,8 @@ def steps_pages(plane: Plane) -> list[str]:
         if i == 0:
             badges = "".join(f'<span class="badge">{b}</span>' for b in plane.badges)
             head = f'<h1>{plane.title}</h1><div class="sub">{plane.sub}</div>'
-            if plane.lab:
-                head += f'<div class="exp">{plane.lab}</div>'
+            if plane.box:
+                head += f'<div class="exp">{plane.box}</div>'
             head += badges
             head += '<div style="height:3mm"></div>'
         else:
@@ -70,8 +70,7 @@ def sheet_document(plane: Plane) -> str:
 
 
 ALL_LINES_PDF = "all-line-sheets.pdf"
-LAB_PDF = "lab/arrow-lab.pdf"
-SCORE_PDF = "lab/arrow-lab-score-card.pdf"
+COUNT = {2: "two", 3: "three", 4: "four", 5: "five", 6: "six"}
 
 
 def _plain_doc(title: str, planes: list[Plane], pages: list[str]) -> str:
@@ -82,26 +81,27 @@ def _plain_doc(title: str, planes: list[Plane], pages: list[str]) -> str:
     )
 
 
-def score_card_page(lab: list[Plane]) -> str:
-    """The Arrow lab score card: the four planes, then experiments on one plane."""
+def score_card_page(s: Series) -> str:
+    """A series score card: its planes, then experiments on one plane."""
     head = (
         "<tr><th>{}</th><th>My guess</th><th>Throw 1</th><th>Throw 2</th>"
         "<th>Throw 3</th><th>Straight?</th></tr>"
     )
     cells = "<td></td>" * 5
     rows1 = "".join(
-        f"<tr><td><b>{p.badges[0][-1]}</b> {p.name.split(': ')[-1]}</td>{cells}</tr>"
-        for p in lab
+        f"<tr><td><b>{p.letter}</b> {p.title.title()}</td>{cells}</tr>"
+        for p in s.planes
     )
     rows2 = "".join(
         f"<tr><td>{e}<br><small>on plane ____</small></td>{cells}</tr>"
-        for e in LAB_EXPERIMENTS
+        for e in s.experiments
     )
+    count = COUNT.get(len(s.planes), str(len(s.planes)))
     return (
-        '<div class="page inst"><h1 style="font-size:22pt">ARROW LAB: SCORE CARD</h1>'
+        f'<div class="page inst"><h1 style="font-size:22pt">{s.title}: SCORE CARD</h1>'
         '<div class="sub">Count steps from where you throw to where the plane lands. '
         'Write ✓ under "Straight?" if it flew straight.</div>'
-        f'<h3>1. The four planes</h3><table class="score">{head.format("Plane")}'
+        f'<h3>1. The {count} planes</h3><table class="score">{head.format("Plane")}'
         f"{rows1}</table>"
         "<h3>2. Experiments: change one thing, then throw again</h3>"
         f'<table class="score">{head.format("Experiment")}{rows2}</table>'
@@ -111,31 +111,37 @@ def score_card_page(lab: list[Plane]) -> str:
     )
 
 
-def lab_intro_page(lab: list[Plane]) -> str:
-    """The first page of the Arrow lab PDF."""
+def series_intro_page(s: Series) -> str:
+    """The first page of a series PDF."""
     cards = "".join(
         f'<div class="labcard">{p.finished}<b>{p.name}</b><br>'
         f"<span>{p.sub}</span></div>"
-        for p in lab
+        for p in series_planes(s)
     )
     return (
-        f'<div class="page inst"><h1>ARROW LAB</h1><div class="sub">{LAB_INTRO}</div>'
-        f'<div class="labgrid">{cards}</div><div class="tips">{LAB_HOWTO}</div>'
-        f'<div class="tips" style="background:#fff9db">{LAB_FOUND}</div>'
+        f'<div class="page inst"><h1>{s.title}</h1><div class="sub">{s.intro}</div>'
+        f'<div class="labgrid">{cards}</div><div class="tips">{s.howto}</div>'
+        f'<div class="tips" style="background:#fff9db">{s.found}</div>'
         '<div class="foot"><span>No printer? Every plane has step pages that work with '
         "any plain A4 sheet.</span></div></div>"
     )
 
 
-def lab_document(lab: list[Plane]) -> str:
-    """The whole Arrow lab in one PDF: intro, each plane's steps and line sheet,
-    and the score card."""
-    pages = [lab_intro_page(lab)]
-    for p in lab:
+def series_document(s: Series) -> str:
+    """A whole series in one PDF: intro, each plane's steps and line sheet, and the
+    score card."""
+    planes = series_planes(s)
+    pages = [series_intro_page(s)]
+    for p in planes:
         pages += steps_pages(p)
         pages.append(f'<div class="page lines">{p.line_sheet}</div>')
-    pages.append(score_card_page(lab))
-    return _plain_doc("Arrow lab", lab, pages)
+    pages.append(score_card_page(s))
+    return _plain_doc(s.name, planes, pages)
+
+
+def score_card_document(s: Series) -> str:
+    """The score card on its own."""
+    return _plain_doc(f"{s.name} score card", series_planes(s), [score_card_page(s)])
 
 
 def all_sheets_document(planes: list[Plane]) -> str:
@@ -175,56 +181,49 @@ def card_path(slug: str) -> str:
     return f"{slug}/social.png" if slug else "social.png"
 
 
-def write_build_files(planes: list[Plane], lab: list[Plane], out: Path) -> list[Path]:
+def write_build_files(
+    planes: list[Plane], groups: list[Series], out: Path
+) -> list[Path]:
     """Print each plane's two PDFs into ``out/<slug>/``, one PDF with all line
-    sheets into ``out/``, and every social preview."""
+    sheets into ``out/``, each series' PDFs, and every social preview."""
     from playwright.sync_api import sync_playwright  # noqa: PLC0415 -- heavy, build only
 
+    grouped = [p for s in groups for p in series_planes(s)]
+    docs: list[tuple[str, str]] = []
+    for plane in planes + grouped:
+        docs.append((f"{plane.slug}/{plane.slug}-steps.pdf", steps_document(plane)))
+        docs.append((f"{plane.slug}/{plane.slug}-lines.pdf", sheet_document(plane)))
+    docs.append((ALL_LINES_PDF, all_sheets_document(planes + grouped)))
+    for s in groups:
+        docs.append((s.pdf, series_document(s)))
+        docs.append((s.score_pdf, score_card_document(s)))
+    cards = [
+        ("", card_document("Fold, throw, fly", [p.finished or "" for p in planes[:3]]))
+    ]
+    cards += [
+        (p.slug, card_document(p.name, [p.finished or ""])) for p in planes + grouped
+    ]
+    cards += [
+        (
+            s.slug,
+            card_document(s.name, [p.finished or "" for p in series_planes(s)[:3]]),
+        )
+        for s in groups
+    ]
     written = []
     with sync_playwright() as pw:
         browser = pw.chromium.launch()
         page = browser.new_page(viewport={"width": CARD_W, "height": CARD_H})
-        for plane in planes + lab:
-            folder = out / plane.slug
-            folder.mkdir(parents=True, exist_ok=True)
-            for name, doc in (
-                (f"{plane.slug}-steps.pdf", steps_document(plane)),
-                (f"{plane.slug}-lines.pdf", sheet_document(plane)),
-            ):
-                page.set_content(doc, wait_until="load")
-                path = folder / name
-                page.pdf(path=str(path), format="A4", print_background=True)
-                written.append(path)
-        (out / "lab").mkdir(parents=True, exist_ok=True)
-        for name, doc in (
-            (ALL_LINES_PDF, all_sheets_document(planes + lab)),
-            (LAB_PDF, lab_document(lab)),
-            (
-                SCORE_PDF,
-                _plain_doc("Arrow lab score card", lab, [score_card_page(lab)]),
-            ),
-        ):
-            page.set_content(doc, wait_until="load")
+        for name, doc in docs:
             path = out / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            page.set_content(doc, wait_until="load")
             page.pdf(path=str(path), format="A4", print_background=True)
             written.append(path)
-        cards = [
-            (
-                "",
-                card_document(
-                    "Fold, throw, fly", [p.finished or "" for p in planes[:3]]
-                ),
-            )
-        ]
-        cards += [
-            (p.slug, card_document(p.name, [p.finished or ""])) for p in planes + lab
-        ]
-        cards.append(
-            ("lab", card_document("Arrow lab", [p.finished or "" for p in lab[:3]]))
-        )
         for slug, doc in cards:
-            page.set_content(doc, wait_until="load")
             path = out / card_path(slug)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            page.set_content(doc, wait_until="load")
             page.screenshot(path=str(path))
             written.append(path)
         browser.close()

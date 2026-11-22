@@ -3,7 +3,7 @@
 {{ defs }}
 <h1>{{ plane.name }}</h1>
 <p class="lead">{{ plane.sub }}</p>
-{% if lab_box %}<div class="exp">{{ lab_box }}</div>{% endif %}
+{% if box %}<div class="exp">{{ box }}</div>{% endif %}
 <div>{% for b in plane.badges %}<span class="badge">{{ b }}</span>{% endfor %}</div>
 <div class="hero">
 <div class="pic">{{ finished }}</div>
@@ -19,5 +19,5 @@
 {% for p in panels %}{{ p }}{% endfor %}
 </div>
 <div class="tips">{{ tips }}</div>
-{% if lab_box %}<p><a href="{{ url('lab/') }}">← Arrow lab</a></p>{% else %}<p><a href="{{ url('') }}">← all planes</a></p>{% endif %}
+{% if back %}<p><a href="{{ url(back.slug ~ '/') }}">← {{ back.name }}</a></p>{% else %}<p><a href="{{ url('') }}">← all planes</a></p>{% endif %}
 {% endblock %}
