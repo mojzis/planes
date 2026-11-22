@@ -14,8 +14,8 @@ import deedum
 from deedum import Page
 from markupsafe import Markup
 
-from planes.catalogue import LAB_FOUND, LAB_HOWTO, LAB_INTRO, Plane, lab_planes, planes
-from planes.printing import LAB_PDF, SCORE_PDF, card_path, panel_html, write_build_files
+from planes.catalogue import Plane, planes, series, series_planes
+from planes.printing import COUNT, card_path, panel_html, write_build_files
 from planes.sheets import defs, legend
 
 
@@ -31,8 +31,9 @@ class PlanesApp(deedum.App):
         """Build every plane once; the pages and the PDFs share them."""
         super().__init__(site)
         self.planes = planes()
-        self.lab = lab_planes()
-        self.by_url = {f"{p.slug}/": p for p in self.planes + self.lab}
+        self.series = {f"{s.slug}/": s for s in series()}
+        grouped = [p for s in self.series.values() for p in series_planes(s)]
+        self.by_url = {f"{p.slug}/": p for p in self.planes + grouped}
 
     def load_pages(self) -> list[Page]:
         """The catalogue, one page per plane, plus any markdown in ``content/``."""
@@ -58,28 +59,28 @@ class PlanesApp(deedum.App):
             )
             for url, plane in self.by_url.items()
         )
-        pages.append(
+        pages.extend(
             self.page(
-                "lab/",
-                title="Arrow lab",
-                description="Four almost identical paper planes, each changing one "
-                "thing: find out what makes a plane fly far.",
-                template="lab.html",
-                image=card_path("lab"),
+                url,
+                title=s.name,
+                description=s.description,
+                template="series.html",
+                image=card_path(s.slug),
             )
+            for url, s in self.series.items()
         )
         return pages
 
     def context(self, page: Page) -> dict[str, Any]:
         """``plane`` on a plane page, its pictures marked safe."""
-        if page.url == "lab/":
+        if s := self.series.get(page.url):
             return {
-                "lab_intro": Markup(LAB_INTRO),  # noqa: S704
-                "lab_howto": Markup(LAB_HOWTO),  # noqa: S704
-                "lab_found": Markup(LAB_FOUND),  # noqa: S704
-                "lab_cards": self._cards(self.lab),
-                "lab_pdf": LAB_PDF,
-                "score_pdf": SCORE_PDF,
+                "series": s,
+                "intro": Markup(s.intro),  # noqa: S704
+                "howto": Markup(s.howto),  # noqa: S704
+                "found": Markup(s.found),  # noqa: S704
+                "count": COUNT.get(len(s.planes), len(s.planes)),
+                "series_cards": self._cards(series_planes(s)),
             }
         plane = self.by_url.get(page.url)
         if plane is None:
@@ -90,7 +91,8 @@ class PlanesApp(deedum.App):
             "finished": Markup(plane.finished or ""),  # noqa: S704
             "tips": Markup(plane.tips),  # noqa: S704
             "defs": Markup(defs(plane.width, plane.height)),  # noqa: S704
-            "lab_box": Markup(plane.lab or ""),  # noqa: S704
+            "box": Markup(plane.box or ""),  # noqa: S704
+            "back": self.series.get(f"{plane.series}/"),
         }
 
     @staticmethod
@@ -108,14 +110,17 @@ class PlanesApp(deedum.App):
         """The plane list for the catalogue and the line legend."""
         return {
             "cards": self._cards(self.planes),
-            "lab_teaser": Markup(self.lab[0].finished or ""),  # noqa: S704
+            "teasers": [
+                {"series": s, "picture": Markup(series_planes(s)[0].finished or "")}  # noqa: S704
+                for s in self.series.values()
+            ],
             "legend": Markup(legend()),  # noqa: S704
         }
 
     def after_build(self, out: Path) -> None:
         """Print the two PDFs of every plane and the social previews."""
         if os.environ.get("PLANES_PDF", "1") != "0":
-            write_build_files(self.planes, self.lab, out)
+            write_build_files(self.planes, list(self.series.values()), out)
 
 
 def _plain(text: str) -> str:

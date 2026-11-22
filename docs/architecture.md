@@ -17,12 +17,18 @@ site whose App makes one page per plane and prints the PDFs after the build.
   painted far to near.
 - `planes/sheets.py`: print CSS, the line legend, and the line sheet: creases that
   lie on the top, front-facing layer when they are folded.
-- `planes/catalogue.py`: a `Plane` per model: panels (text, flat SVG, 3D SVG), tips,
-  badges, finished picture, line sheet. `ORDER` is the catalogue order.
+- `planes/data/`: one file per plane (`PLANE = Spec(...)`) or series of planes
+  (`SERIES = Series(...)`, e.g. the Arrow lab): words, fold model, stabilizers, flaps.
+  `order` sets the catalogue order. Files starting with `_` hold shared bits.
+- `planes/spec.py`: the fields a plane or series file can set.
+- `planes/build.py`: `Spec` → `Plane`: panels (text, flat SVG, 3D SVG), the "open the
+  wings", stabilizer and flap steps, finished picture, line sheet. A plane that is not
+  a wing plane (the Tube) passes its own `finish`.
+- `planes/catalogue.py`: finds the files in `planes/data/` and builds each plane once.
 - `planes/printing.py`: HTML for the two PDFs and the social previews, and
   `write_build_files` (Playwright,
   headless Chromium).
-- `site/site_app.py`: deedum `App`: catalogue page, plane pages, PDFs in
+- `site/site_app.py`: deedum `App`: catalogue page, plane pages, a page per series, PDFs in
   `after_build`. Templates and CSS live next to it.
 
 ## Flows

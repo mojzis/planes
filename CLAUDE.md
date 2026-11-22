@@ -11,8 +11,10 @@ docs/architecture.md; decisions in docs/decisions/ (newest wins).
 - `uv run poe serve` — live preview, `PLANES_PDF=0` (no PDFs or social images, so check reports the PDFs missing).
 - The deedum site is in `site/`, not the repo root (decision 0002).
 - Pictures come only from the fold model (`planes/models.py`). Never hand-draw a step.
-- New plane: add its steps to `models.py`, a builder + slug in `catalogue.py`
-  (`ORDER`), then look at the page and both PDFs before committing.
+- New plane: one file in `planes/data/` with `PLANE = Spec(...)` (fields in
+  `planes/spec.py`); a new series: `SERIES = Series(...)`. Fold steps go in `models.py`
+  when shared, else in the file itself. Then look at the page and both PDFs before
+  committing.
 - After changing a model or renderer, look at the result (screenshot the page, rasterize
   the PDF with `pdftoppm`); tests only check structure.
 
