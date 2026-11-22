@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1>Paper planes</h1>
+<p class="lead">Original planes for kids who just started folding: not hard, a little extravagant. Each one has step-by-step pictures, a PDF of the steps and a line sheet to print and fold.</p>
+<div class="cards">
+{% for c in cards %}
+<a class="card" href="{{ url(c.url) }}">
+<div class="pic">{{ c.picture }}</div>
+<h2>{{ c.plane.name }}</h2>
+<p>{{ c.plane.sub }}</p>
+<div>{% for b in c.plane.badges %}<span class="badge">{{ b }}</span>{% endfor %}</div>
+</a>
+{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+title = "Paper planes"
+description = "Original paper planes for kids: step-by-step pictures and printable PDFs."
+base_url = "https://mojzis.github.io"
+base_path = "/planes/"
+lang = "en"
+favicon = "icon.svg"
+theme_color = "#1971c2"
+llms = true
+out = "../_site"
+app = "site_app:PlanesApp"
