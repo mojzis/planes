@@ -66,7 +66,7 @@ source = ["planes"]
 show_missing = true
 
 [tool.vulture]
-paths = ["planes", "site"]
+paths = ["planes", "site_app.py"]
 # Used by deedum (hooks) and the Jinja templates, which vulture cannot see.
 ignore_names = ["PlanesApp", "context", "globals", "after_build", "scissors"]
 
@@ -134,7 +134,7 @@ cmd = "biston scan ."
 help = "Clone detection (biston)"
 
 [tool.poe.tasks.dead-code]
-cmd = "vulture planes site"
+cmd = "vulture planes site_app.py"
 help = "Dead code detection"
 
 [tool.poe.tasks.abstractions]
@@ -165,17 +165,28 @@ ignore_fail = "return_non_zero"
 help = "Run all checks (report all failures)"
 
 [tool.poe.tasks.site]
-cmd = "deedum build --check --config site/deedum.toml"
+cmd = "deedum build --check"
 help = "Build the site and the PDFs into _site/, then lint it"
 
 [tool.poe.tasks.serve]
-cmd = "deedum serve --config site/deedum.toml"
+cmd = "deedum serve"
 env = { PLANES_PDF = "0" }
 help = "Serve the site locally with live rebuilds (no PDFs)"
 
 [tool.poe.tasks.setup]
 cmd = "madoqua install"
 help = "Install the madoqua commit hook (sets core.hooksPath)"
+
+[tool.deedum]
+title = "Paper planes"
+description = "Original paper planes for kids: step-by-step pictures and printable PDFs."
+base_url = "https://mojzis.github.io"
+base_path = "/planes/"
+lang = "en"
+favicon = "icon.svg"
+theme_color = "#1971c2"
+llms = true
+app = "site_app:PlanesApp"
 
 [tool.uv.sources]
 deedum = { git = "https://github.com/mojzis/deedum" }

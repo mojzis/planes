@@ -204,7 +204,7 @@ wheels = [
 [[package]]
 name = "deedum"
 version = "0.1.0"
-source = { git = "https://github.com/mojzis/deedum#79a73e8e502df3dbd7cce08683238bf41a54b72c" }
+source = { git = "https://github.com/mojzis/deedum#963648977b58a7e492589db917085a3407069034" }
 dependencies = [
     { name = "jinja2" },
     { name = "markdown-it-py" },
