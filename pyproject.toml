@@ -49,7 +49,7 @@ select = ["E", "F", "W", "I", "UP", "B", "S", "SIM", "C4", "DTZ", "T20", "PTH", 
 "tests/**" = ["S101", "S105", "S106", "PLR2004"]
 # The fold model and its renderers are geometry code: coordinates as positional
 # arguments, short math names, literal millimetres, and long step texts.
-"planes/{fold,iso,render,models,sheets,catalogue}.py" = ["PLR2004", "PLR0913", "PLR0917", "E731", "C408", "E501"]
+"planes/{fold,iso,render,models,sheets,catalogue,build}.py" = ["PLR2004", "PLR0913", "PLR0917", "E731", "C408", "E501"]
 
 [tool.ruff.format]
 

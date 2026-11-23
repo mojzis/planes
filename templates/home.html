@@ -2,6 +2,9 @@
 {% block content %}
 <h1>Paper planes</h1>
 <p class="lead">Original planes for kids who just started folding: not hard, a little extravagant. Each one has step-by-step pictures, a PDF of the steps and a line sheet to print and fold.</p>
+<div class="downloads home-dl">
+<a class="dl" href="{{ url('all-line-sheets.pdf') }}"><b>All line sheets</b> PDF<small>every plane's fold lines in one file, one A4 page each</small></a>
+</div>
 <div class="cards">
 {% for c in cards %}
 <a class="card" href="{{ url(c.url) }}">
@@ -12,4 +15,13 @@
 </a>
 {% endfor %}
 </div>
+{% for t in teasers %}
+<h2>{{ t.series.name }}</h2>
+<a class="card lab-teaser" href="{{ url(t.series.slug ~ '/') }}">
+<div class="pic">{{ t.picture }}</div>
+<div><h2>{{ t.series.teaser_title }}</h2>
+<p>{{ t.series.teaser }}</p>
+<span class="badge">{{ t.series.planes|length }} planes</span><span class="badge">Score card</span></div>
+</a>
+{% endfor %}
 {% endblock %}
