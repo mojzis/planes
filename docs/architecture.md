@@ -28,6 +28,9 @@ site (config in `[tool.deedum]` of `pyproject.toml`) whose App makes one page pe
 - `planes/printing.py`: HTML for the two PDFs and the social previews, and
   `write_build_files` (Playwright,
   headless Chromium).
+- `planes/video.py`: folding videos. Every frame comes from the fold model
+  (`iso.step_view` at 0° to 180°, a fixed camera per view). The frames are rendered
+  with rsvg-convert and joined with ffmpeg into `_video/<slug>-<palette>.mp4`.
 - `site_app.py`: deedum `App`: catalogue page, plane pages, a page per series, PDFs in
   `after_build`. Templates in `templates/`, CSS in `static/`.
 

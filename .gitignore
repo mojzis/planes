@@ -16,3 +16,4 @@ htmlcov/
 .ruff_cache/
 .mypy_cache/
 _site/
+_video/

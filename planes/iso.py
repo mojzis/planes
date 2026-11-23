@@ -124,7 +124,8 @@ def camera(yaw, pitch):
     return proj, (x, y, z)
 
 
-def svg(surfs, yaw, pitch, w, h, pad=8, outline=True, cull=True):
+def _items(surfs, yaw, pitch, cull=True, colors=(FRONT, BACK), by_planes=False):
+    """Visible surfaces, projected: (depth, rings, colour)."""
     proj, V = camera(yaw, pitch)
     Lt = norm((0.3, 0.5, 1.0))
     items = []
@@ -133,20 +134,108 @@ def svg(surfs, yaw, pitch, w, h, pad=8, outline=True, cull=True):
             continue
         rings = [[proj(q) for q in r] for r in s.rings]
         k = 0.8 + 0.2 * abs(dot(s.n, Lt))
-        base = FRONT if s.u else BACK
+        base = colors[0] if s.u else colors[1]
         col = "#{:02x}{:02x}{:02x}".format(*tuple(int(c * k) for c in base))
         depth = sum(q[2] for q in rings[0]) / len(rings[0])
         items.append((depth, rings, col))
-    if not items:
-        return ""
+    items.sort(key=lambda t: -t[0])
+    return _paint_order(items) if by_planes else items
+
+
+def _side(ring, other, eps=0.05):
+    """Where `other` lies against the plane of `ring`, seen from the viewer:
+    1 all in front, -1 all behind, 0 both or neither."""
+    n, p0 = newell(ring), ring[0]
+    toward = -1 if n[2] > 0 else 1  # the viewer looks along +depth
+    ds = [toward * dot(n, sub(q, p0)) for q in other]
+    if all(d >= -eps for d in ds):
+        return 1
+    if all(d <= eps for d in ds):
+        return -1
+    return 0
+
+
+def _behind(a, b):
+    """True if surface a must be painted before b (a is behind b)."""
+    ra, rb = a[1][0], b[1][0]
+    if (
+        max(q[0] for q in ra) < min(q[0] for q in rb)
+        or max(q[0] for q in rb) < min(q[0] for q in ra)
+        or max(q[1] for q in ra) < min(q[1] for q in rb)
+        or max(q[1] for q in rb) < min(q[1] for q in ra)
+    ):
+        return None  # apart on screen: any order
+    for s, flip in ((_side(ra, rb), False), (_side(rb, ra), True)):
+        if s:
+            return (s > 0) != flip
+    return None
+
+
+def _paint_order(items):
+    """Far to near. Centre depth alone fails for a big sheet and a small flap
+    standing over it, so overlapping surfaces are ordered by their planes. For
+    folding sheets; the finished plane's surfaces touch along edges and keep the
+    depth order."""
+    n = len(items)
+    after = [set() for _ in range(n)]  # after[i]: drawn after i
+    for i in range(n):
+        for j in range(i + 1, n):
+            b = _behind(items[i], items[j])
+            if b is True:
+                after[i].add(j)
+            elif b is False:
+                after[j].add(i)
+    need = [0] * n
+    for i in range(n):
+        for j in after[i]:
+            need[j] += 1
+    out, done = [], [False] * n
+    while len(out) < n:  # depth order among the free ones; a cycle falls back to depth
+        k = next((i for i in range(n) if not done[i] and need[i] == 0), None)
+        if k is None:
+            k = next(i for i in range(n) if not done[i])
+        done[k] = True
+        out.append(items[k])
+        for j in after[k]:
+            need[j] -= 1
+    return out
+
+
+def extent(surfs, yaw, pitch, cull=True):
+    """Bounding box (x0, x1, y0, y1) of the view, to fix the frame across views."""
+    items = _items(surfs, yaw, pitch, cull)
     xs = [q[0] for _, rs, _ in items for q in rs[0]]
     ys = [q[1] for _, rs, _ in items for q in rs[0]]
-    x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
+    return min(xs), max(xs), min(ys), max(ys)
+
+
+def svg(
+    surfs,
+    yaw,
+    pitch,
+    w,
+    h,
+    pad=8,
+    outline=True,
+    cull=True,
+    bounds=None,
+    colors=(FRONT, BACK),
+    stroke="#343a40",
+    lines=(),
+    by_planes=False,
+):
+    """The surfaces painted far to near, scaled to fit, or to fit `bounds`.
+    `colors`: RGB of the front and back of the paper; `lines`: 3D segments
+    (a, b, svg attributes) drawn on top; `by_planes`: see `_paint_order`."""
+    items = _items(surfs, yaw, pitch, cull, colors, by_planes)
+    if not items:
+        return ""
+    x0, x1, y0, y1 = bounds or extent(surfs, yaw, pitch, cull)
     sc = min((w - 2 * pad) / (x1 - x0 or 1), (h - 2 * pad) / (y1 - y0 or 1))
     ox = (w - (x1 - x0) * sc) / 2 - x0 * sc
     oy = (h - (y1 - y0) * sc) / 2 - y0 * sc
     out = []
-    for _depth, rings, col in sorted(items, key=lambda t: -t[0]):
+    for _depth, rings, col in items:
         d = " ".join(
             "M"
             + " L".join(f"{q[0] * sc + ox:.1f},{q[1] * sc + oy:.1f}" for q in r)
@@ -154,12 +243,19 @@ def svg(surfs, yaw, pitch, w, h, pad=8, outline=True, cull=True):
             for r in rings
         )
         st = (
-            'stroke="#343a40" stroke-width="1"'
+            f'stroke="{stroke}" stroke-width="1"'
             if outline
             else f'stroke="{col}" stroke-width="0.6"'
         )
         out.append(
             f'<path d="{d}" fill="{col}" fill-rule="evenodd" {st} stroke-linejoin="round"/>'
+        )
+    proj = camera(yaw, pitch)[0]
+    for a, b, attrs in lines:
+        (ax, ay, _), (bx, by, _) = proj(a), proj(b)
+        out.append(
+            f'<line x1="{ax * sc + ox:.1f}" y1="{ay * sc + oy:.1f}" '
+            f'x2="{bx * sc + ox:.1f}" y2="{by * sc + oy:.1f}" {attrs}/>'
         )
     return f'<svg viewBox="0 0 {w} {h}" xmlns="http://www.w3.org/2000/svg">{"".join(out)}</svg>'
 
